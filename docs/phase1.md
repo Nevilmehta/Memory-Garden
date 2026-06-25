@@ -63,3 +63,12 @@ No knowledge graph yet.
 
 Just the foundation.
 
+----------------------------------------------------------------
+So Qdrant now has duplicate memories.
+
+This is actually an important real-world memory-system lesson:
+Long-term memory systems need duplicate detection.
+
+But we will not fix that yet. That becomes important in a later phase called Memory Growth / Merge / Duplicate Detection.
+
+----------------------------------------------------------------
