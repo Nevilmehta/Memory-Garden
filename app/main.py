@@ -18,19 +18,15 @@ def root():
         "phase": "Phase 1 - Memory RAG Foundation",
     }
 
-
 @app.post("/memories")
 def add_memory(memory: MemoryCreate):
-    stored_memory = memory_store.add_memory(
+    result = memory_store.add_memory(
         text=memory.text,
         category=memory.category,
-        importance=memory.importance
+        importance=memory.importance,
     )
 
-    return {
-        "status": "success",
-        "memory": stored_memory
-    }
+    return result
 
 @app.post("/memories/search")
 def search_memory(search: MemorySearch):

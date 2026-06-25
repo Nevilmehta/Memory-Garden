@@ -72,3 +72,21 @@ Long-term memory systems need duplicate detection.
 But we will not fix that yet. That becomes important in a later phase called Memory Growth / Merge / Duplicate Detection.
 
 ----------------------------------------------------------------
+Duplication:
+Before adding a memory, we will search Qdrant with the same text.
+If a very similar memory already exists, we will not store it again.
+
+New memory comes in
+↓
+Embed new memory
+↓
+Search existing memories
+↓
+If top similarity score is very high, example >= 0.92
+    → treat as duplicate
+    → do not store
+Else
+    → store as new memory
+
+----------------------------------------------------------------
+
