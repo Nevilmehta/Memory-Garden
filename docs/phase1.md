@@ -90,3 +90,22 @@ Else
 
 ----------------------------------------------------------------
 
+Important Concept: Memory Extraction
+Right now we are sending this,
+Hey bro today I was working on Memory Garden and I think I want to use Qdrant only, not ChromaDB.
+Would be stored as raw memory
+
+But a real memory system should extract the actual memory,
+User wants to use Qdrant only for the Memory Garden project, not ChromaDB.
+
+So this is the flow,
+User Message
+   ↓
+Memory Extractor
+   ↓
+Clean Memory
+   ↓
+Embedding
+   ↓
+Qdrant
+

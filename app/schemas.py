@@ -9,3 +9,9 @@ class MemoryCreate(BaseModel):
 class MemorySearch(BaseModel):
     query: str = Field(..., min_length=3)
     limit: int = Field(default=5, ge=1, le=20)
+
+# ------------------------------------------------------------------------
+
+class MessageInput(BaseModel):
+    message: str = Field(..., min_length=3)
+    
