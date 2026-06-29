@@ -131,4 +131,11 @@ This teaches a very important AI engineering idea:
 LLMs are not only for chatting.
 They can act as structured information extractors.
 
+----------------------------------------------------------------------------------
+
 Memory Garden’s job is to decide what matters long-term.
+Primary: Groq / hosted LLM
+Fallback: Ollama local model
+Sensitive memories: local-only mode
+
+-----------------------------------------------------------------------------------

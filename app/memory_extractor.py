@@ -1,11 +1,11 @@
-from app.ollama_client import OllamaClient
+from app.groq_client import GroqClient
 
 class MemoryExtractor:
     def __init__(self):
-        self.llm = OllamaClient(model_name="llama3.2:3b")
+        self.llm = GroqClient(model_name="llama-3.1-8b-instant")
 
     def extract(self, message: str) -> dict:
-        prompt = f"""
+        system_prompt = """
 You are the memory extraction system for an AI called Memory Garden.
 
 Your job is to decide whether the user's message contains useful long-term memory.
@@ -31,29 +31,40 @@ Do NOT store:
 Return ONLY valid JSON.
 
 JSON schema:
-{{
-  "should_store": true or false,
+{
+  "should_store": true,
   "memory_text": "clean third-person memory sentence",
-  "category": "project | goal | learning | interest | preference | idea | experience | general",
-  "importance": number from 1 to 10,
-  "reason": "short reason why this should or should not be stored"
-}}
+  "category": "project",
+  "importance": 8,
+  "reason": "short reason"
+}
+
+Allowed categories:
+project, goal, learning, interest, preference, idea, experience, general
 
 Rules:
 - Use third person: "User wants...", "User is learning...", "User prefers..."
 - If should_store is false, memory_text should be an empty string.
+- Importance must be a number from 1 to 10.
 - Importance 8-10 means important for long-term projects or Jarvis.
 - Importance 5-7 means useful but not critical.
 - Importance 1-4 means minor.
-- Return JSON only. No markdown. No explanation outside JSON.
+- Return JSON only.
+"""
 
+        user_prompt = f"""
 User message:
 {message}
 """
 
-        result = self.llm.generate_json(prompt)
+        result = self.llm.generate_json(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+        )
 
         return {
+            "provider": "groq",
+            "model": self.llm.model_name,
             "should_store": result.get("should_store", False),
             "text": result.get("memory_text", ""),
             "category": result.get("category", "general"),

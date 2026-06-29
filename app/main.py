@@ -13,6 +13,7 @@ app = FastAPI(
 memory_store = QdrantMemoryStore()
 memory_extractor = MemoryExtractor()
 
+
 @app.get("/")
 def root():
     return {
@@ -72,3 +73,20 @@ def extract_and_store_memory(input_data: MessageInput):
         "store_result": store_result,
     }
 
+# ----------------------------------------------------------------------------
+
+@app.get("/health")
+def health_check():
+    return {
+        "status": "ok",
+        "message": "FastAPI is running."
+    }
+
+@app.get("/health/qdrant")
+def qdrant_health_check():
+    collections = memory_store.client.get_collections().collections
+
+    return {
+        "status": "ok",
+        "collections": [collection.name for collection in collections],
+    }

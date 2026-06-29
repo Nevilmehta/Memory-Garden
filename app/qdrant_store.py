@@ -10,7 +10,12 @@ from app.embeddings import EmbeddingService
 class QdrantMemoryStore:
     def __init__(self):
         self.collection_name = "memory_garden"
-        self.client = QdrantClient(host="localhost", port=6333)
+        self.client = QdrantClient(
+            host="localhost",
+            port=6333,
+            timeout=60,
+            check_compatibility=False,
+        )
         self.embedding_service = EmbeddingService()
         self._ensure_collection()
 

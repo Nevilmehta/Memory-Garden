@@ -5,3 +5,4 @@ sentence-transformers
 pydantic
 python-dotenv
 requests
+groq
