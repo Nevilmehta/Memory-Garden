@@ -4,3 +4,4 @@ qdrant-client
 sentence-transformers
 pydantic
 python-dotenv
+requests

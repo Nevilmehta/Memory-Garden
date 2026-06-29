@@ -50,6 +50,16 @@ def search_memory(search: MemorySearch):
 def extract_and_store_memory(input_data: MessageInput):
     extracted_memory = memory_extractor.extract(input_data.message)
 
+    if not extracted_memory["should_store"]:
+        return {
+            "input_message": input_data.message,
+            "extracted_memory": extracted_memory,
+            "store_result": {
+                "status": "skipped",
+                "message": "No useful long-term memory found.",
+            },
+        }
+
     store_result = memory_store.add_memory(
         text=extracted_memory["text"],
         category=extracted_memory["category"],

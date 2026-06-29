@@ -90,7 +90,8 @@ Else
 
 ----------------------------------------------------------------
 
-Important Concept: Memory Extraction
+Important Concept: Memory Extraction(Rule based)
+
 Right now we are sending this,
 Hey bro today I was working on Memory Garden and I think I want to use Qdrant only, not ChromaDB.
 Would be stored as raw memory
@@ -109,3 +110,25 @@ Embedding
    ↓
 Qdrant
 
+
+Next step: LLM Based Memory Extractor with Ollama
+
+Right now your extractor is rule based.
+That is useful for learning, but its not intelligent.
+
+Now we want this,
+User message
+↓
+Ollama LLM
+↓
+Extract clean memory
+↓
+Return structured JSON
+↓
+Store in Qdrant
+
+This teaches a very important AI engineering idea:
+LLMs are not only for chatting.
+They can act as structured information extractors.
+
+Memory Garden’s job is to decide what matters long-term.

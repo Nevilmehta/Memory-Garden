@@ -1,26 +1,64 @@
-
+from app.ollama_client import OllamaClient
 
 class MemoryExtractor:
-    def extract(self, message: str):
-        """
-        Phase 1C rule-based memory extractor.
+    def __init__(self):
+        self.llm = OllamaClient(model_name="llama3.2:3b")
 
-        Later this will be replaced with an LLM-based extractor.
-        For now, it teaches us:
-        - what should become memory
-        - what category it belongs to
-        - how important it is
-        """
-        cleaned_message = message.strip()
+    def extract(self, message: str) -> dict:
+        prompt = f"""
+You are the memory extraction system for an AI called Memory Garden.
 
-        category = self._classify_category(cleaned_message)
-        importance = self._score_importance(cleaned_message, category)
-        memory_text = self._rewrite_as_memory(cleaned_message)
+Your job is to decide whether the user's message contains useful long-term memory.
+
+A useful long-term memory includes:
+- projects the user is building
+- goals
+- skills the user is learning
+- interests
+- preferences
+- important decisions
+- plans
+- personal workflow preferences
+- ideas that may matter later
+
+Do NOT store:
+- greetings
+- random small talk
+- temporary commands
+- one-time debugging messages unless they reveal a project decision
+- meaningless messages like "ok", "nice", "lets go"
+
+Return ONLY valid JSON.
+
+JSON schema:
+{{
+  "should_store": true or false,
+  "memory_text": "clean third-person memory sentence",
+  "category": "project | goal | learning | interest | preference | idea | experience | general",
+  "importance": number from 1 to 10,
+  "reason": "short reason why this should or should not be stored"
+}}
+
+Rules:
+- Use third person: "User wants...", "User is learning...", "User prefers..."
+- If should_store is false, memory_text should be an empty string.
+- Importance 8-10 means important for long-term projects or Jarvis.
+- Importance 5-7 means useful but not critical.
+- Importance 1-4 means minor.
+- Return JSON only. No markdown. No explanation outside JSON.
+
+User message:
+{message}
+"""
+
+        result = self.llm.generate_json(prompt)
 
         return {
-            "text": memory_text,
-            "category": category,
-            "importance": importance
+            "should_store": result.get("should_store", False),
+            "text": result.get("memory_text", ""),
+            "category": result.get("category", "general"),
+            "importance": result.get("importance", 5),
+            "reason": result.get("reason", ""),
         }
 
     def _classify_category(self, text: str) -> str:
