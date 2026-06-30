@@ -49,28 +49,40 @@ def search_memory(search: MemorySearch):
 
 @app.post("/memories/extract-and-store")
 def extract_and_store_memory(input_data: MessageInput):
-    extracted_memory = memory_extractor.extract(input_data.message)
+    extraction_result = memory_extractor.extract(input_data.message)
 
-    if not extracted_memory["should_store"]:
+    extracted_memories = extraction_result["memories"]
+
+    if not extracted_memories:
         return {
             "input_message": input_data.message,
-            "extracted_memory": extracted_memory,
-            "store_result": {
-                "status": "skipped",
-                "message": "No useful long-term memory found.",
-            },
+            "extracted_memories": [],
+            "store_results": [],
+            "status": "skipped",
+            "message": "No useful long-term memories found.",
         }
 
-    store_result = memory_store.add_memory(
-        text=extracted_memory["text"],
-        category=extracted_memory["category"],
-        importance=extracted_memory["importance"],
-    )
+    store_results = []
+
+    for extracted_memory in extracted_memories:
+        store_result = memory_store.add_memory(
+            text=extracted_memory["text"],
+            category=extracted_memory["category"],
+            importance=extracted_memory["importance"],
+        )
+
+        store_results.append(
+            {
+                "extracted_memory": extracted_memory,
+                "store_result": store_result,
+            }
+        )
 
     return {
         "input_message": input_data.message,
-        "extracted_memory": extracted_memory,
-        "store_result": store_result,
+        "extracted_memory": extracted_memories,
+        "store_result": store_results,
+        "status": "completed"
     }
 
 # ----------------------------------------------------------------------------

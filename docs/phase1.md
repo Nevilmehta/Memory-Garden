@@ -139,3 +139,35 @@ Fallback: Ollama local model
 Sensitive memories: local-only mode
 
 -----------------------------------------------------------------------------------
+
+Multiple memory:
+Example:
+
+I am learning LangGraph for Jarvis, but before going deep into agents, I want to improve my RAG basics. Also, I prefer using Qdrant over ChromaDB.
+
+This should become three memories:
+
+1. User is learning LangGraph for Jarvis.
+2. User wants to improve RAG basics before going deep into agents.
+3. User prefers Qdrant over ChromaDB.
+
+This is important because Memory Garden should not treat a whole paragraph as one messy memory. It should break it into clean memory units.
+
+New Architecture:
+FastAPI
+↓
+MessageInput
+↓
+Groq MemoryExtractor
+↓
+Multiple atomic memories
+↓
+For each memory:
+    Qdrant semantic duplicate check
+    embedding
+    vector storage
+↓
+Search API
+
+-------------------------------------------------------------------------------------
+
