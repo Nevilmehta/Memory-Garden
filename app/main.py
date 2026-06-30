@@ -2,7 +2,8 @@ from fastapi import FastAPI
 
 from app.qdrant_store import QdrantMemoryStore
 from app.memory_extractor import MemoryExtractor
-from app.schemas import MemoryCreate, MemorySearch, MessageInput
+from app.answer_generator import AnswerGenerator
+from app.schemas import MemoryCreate, MemorySearch, MessageInput, ChatRequest
 
 app = FastAPI(
     title="AI Memory Garden",
@@ -12,7 +13,7 @@ app = FastAPI(
 
 memory_store = QdrantMemoryStore()
 memory_extractor = MemoryExtractor()
-
+answer_generator = AnswerGenerator()
 
 @app.get("/")
 def root():
@@ -83,6 +84,26 @@ def extract_and_store_memory(input_data: MessageInput):
         "extracted_memory": extracted_memories,
         "store_result": store_results,
         "status": "completed"
+    }
+
+# ----------------------------------------------------------------------------
+
+@app.post("/chat")
+def chat_with_memory(request: ChatRequest):
+    relevant_memories = memory_store.search_memories(
+        query=request.question,
+        limit=request.limit
+    )
+
+    answer = answer_generator.generate_answer(
+        question=request.question,
+        memories=relevant_memories
+    )
+
+    return {
+        "question": request.question,
+        "answer": answer,
+        "memories_used": relevant_memories
     }
 
 # ----------------------------------------------------------------------------

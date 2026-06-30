@@ -14,4 +14,10 @@ class MemorySearch(BaseModel):
 
 class MessageInput(BaseModel):
     message: str = Field(..., min_length=3)
+
+# -------------------------------------------------------------------------
+
+class ChatRequest(BaseModel):
+    question: str = Field(..., min_length=3)
+    limit: int = Field(default=5, ge=1, le=20)
     

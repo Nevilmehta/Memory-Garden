@@ -171,3 +171,41 @@ Search API
 
 -------------------------------------------------------------------------------------
 
+Answer Generation:
+Until now, Memory Garden can:
+
+Store memories
+Search memories
+Extract clean memories
+Avoid some duplicates
+
+But now we want it to answer questions using stored memories.
+
+This is the first complete RAG loop:
+User Question
+↓
+Embed question
+↓
+Retrieve relevant memories from Qdrant
+↓
+Send question + memories to Groq
+↓
+Generate personalized answer
+
+-----------------------------------------------------------------------------------
+
+Current Architecture:
+FastAPI
+│
+├── /memories
+│     └── Direct memory storage
+│
+├── /memories/search
+│     └── Vector search
+│
+├── /memories/extract-and-store
+│     └── Groq extractor → atomic memories → Qdrant
+│
+└── /chat
+      └── Question → Qdrant retrieval → Groq answer
+      

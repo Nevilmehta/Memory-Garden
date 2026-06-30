@@ -15,7 +15,7 @@ class GroqClient:
         self.client = Groq(api_key=api_key)
         self.model_name = model_name
 
-    def generate_json(self, system_prompt: str, user_prompt: str) -> dict:
+    def generate_json(self, system_prompt: str, user_prompt: str):
         response = self.client.chat.completions.create(
             model=self.model_name,
             messages=[
@@ -28,3 +28,21 @@ class GroqClient:
 
         content = response.choices[0].message.content
         return json.loads(content)
+
+    def generate_text(self, system_prompt: str, user_prompt: str):
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt,
+                },
+            ],
+            temperature=0.3,
+        )
+
+        return response.choices[0].message.content
