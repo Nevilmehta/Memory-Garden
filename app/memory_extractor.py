@@ -69,7 +69,21 @@ User message:
             user_prompt=user_prompt,
         )
 
-        memories = result.get("memories", [])
+
+        if "memories" in result:
+            memories = result.get("memories", [])
+        else:
+            if result.get("should_store") and result.get("memory_text"):
+                memories = [
+                    {
+                        "memory_text": result.get("memory_text"),
+                        "category": result.get("category", "general"),
+                        "importance": result.get("importance", 5),
+                        "reason": result.get("reason", ""),
+                    }
+                ]
+            else:
+                memories = []
 
         cleaned_memories = []
 

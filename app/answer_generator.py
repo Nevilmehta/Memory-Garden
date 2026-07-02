@@ -6,9 +6,9 @@ class AnswerGenerator:
 
     def generate_answer(self, question: str, memories: list[dict]):
         if not memories:
-            return(
-                "I could not find any relevant memories for that yet. "
-                "You may need to store more memories first."
+            return (
+                "I do not have enough relevant memories to answer that yet. "
+                "This may mean the information has not been stored in Memory Garden."
             )
 
         memory_context = self._format_memories(memories)

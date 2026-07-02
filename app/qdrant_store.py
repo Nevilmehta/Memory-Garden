@@ -88,28 +88,62 @@ class QdrantMemoryStore:
             "importance": importance,
         }
 
-    def search_memories(self, query: str, limit: int = 5):
+    def search_memories(self, query: str, limit: int = 5, min_score: float = 0.35, category: str|None = None):
         query_vector = self.embedding_service.embed_text(query)
+
+        # We fetch more than needed because we will filter/rerank locally.
+        raw_limit = max(limit * 3, 10)
 
         results = self.client.query_points(
             collection_name=self.collection_name,
             query=query_vector,
-            limit=limit,
+            limit=raw_limit,
             with_payload=True,
         ).points
 
         memories = []
+        seen_texts = set()
 
         for result in results:
+            payload = result.payload or {}
+
+            text = payload.get("text", "")
+            memory_category = payload.get("category", "general")
+            importance = payload.get("importance", 5)
+
+            if not text:
+                continue
+
+            if result.score < min_score:
+                continue
+
+            if category and memory_category != category:
+                continue
+
+            normalized_text = text.strip().lower()
+
+            if normalized_text in seen_texts:
+                continue
+
+            seen_texts.add(normalized_text)
+
+            # Importance-aware ranking.
+            # Similarity score is still primary, but important memories get a small boost.
+            importance_boost = importance / 100
+            final_score = result.score + importance_boost
+
             memories.append(
                 {
                     "id": result.id,
                     "score": result.score,
-                    "text": result.payload.get("text"),
-                    "category": result.payload.get("category"),
-                    "importance": result.payload.get("importance"),
-                    "created_at": result.payload.get("created_at"),
+                    "final_score": final_score,
+                    "text": text,
+                    "category": memory_category,
+                    "importance": importance,
+                    "created_at": payload.get("created_at"),
                 }
             )
 
-        return memories
+        memories.sort(key=lambda memory: memory["final_score"], reverse=True)
+
+        return memories[:limit]

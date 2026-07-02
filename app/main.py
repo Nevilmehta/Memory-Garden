@@ -38,12 +38,15 @@ def add_memory(memory: MemoryCreate):
 def search_memory(search: MemorySearch):
     results = memory_store.search_memories(
         query=search.query,
-        limit=search.limit
+        limit=search.limit,
+        min_score=search.min_score,
+        category=search.category
     )
 
     return {
         "query": search.query,
-        "results": results
+        "results": results,
+        "count": len(results),
     }
 
 # ----------------------------------------------------------------------------
@@ -92,7 +95,9 @@ def extract_and_store_memory(input_data: MessageInput):
 def chat_with_memory(request: ChatRequest):
     relevant_memories = memory_store.search_memories(
         query=request.question,
-        limit=request.limit
+        limit=request.limit,
+        min_score=request.min_score,
+        category=request.category
     )
 
     answer = answer_generator.generate_answer(
@@ -103,7 +108,8 @@ def chat_with_memory(request: ChatRequest):
     return {
         "question": request.question,
         "answer": answer,
-        "memories_used": relevant_memories
+        "memories_used": relevant_memories,
+        "memory_count": len(relevant_memories)
     }
 
 # ----------------------------------------------------------------------------

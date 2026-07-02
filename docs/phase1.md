@@ -209,3 +209,39 @@ FastAPI
 └── /chat
       └── Question → Qdrant retrieval → Groq answer
       
+------------------------------------------------------------------------------------
+
+Retrieval Quality Improvements:
+Right now /chat works like this:
+Question
+↓
+Qdrant returns top 5 memories
+↓
+Groq answers using them
+
+But there is a problem:
+Qdrant will always return something, even if it is not actually relevant.
+
+Example:
+Question:
+What is my favorite food?
+
+Qdrant may still return:
+User is learning LangGraph for Jarvis.
+User prefers Qdrant for Memory Garden.
+
+That is bad because the LLM may try to answer using unrelated memories.
+So now we improve retrieval quality.
+
+New retrieval logic:
+Search Qdrant
+↓
+Remove memories below score threshold
+↓
+Remove duplicate memory text
+↓
+Boost important memories slightly
+↓
+Return cleaner results
+
+---------------------------------------------------------------------------------
