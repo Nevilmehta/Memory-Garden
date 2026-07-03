@@ -2,24 +2,24 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import Distance, PointStruct, VectorParams
 
-from app.embeddings import EmbeddingService
+from app.core.config import settings
+from app.services.embedding_service import EmbeddingService
 
 
 class QdrantMemoryStore:
     def __init__(self):
-        self.collection_name = "memory_garden"
+        self.collection_name = settings.QDRANT_COLLECTION_NAME
+
         self.client = QdrantClient(
-            host="localhost",
-            port=6333,
-            timeout=60,
+            host=settings.QDRANT_HOST,
+            port=settings.QDRANT_PORT,
             check_compatibility=False,
         )
+
         self.embedding_service = EmbeddingService()
         self._ensure_collection()
-
-# ----------------------------------------------------------------------------------------------
 
     def _ensure_collection(self):
         collections = self.client.get_collections().collections
@@ -33,8 +33,6 @@ class QdrantMemoryStore:
                     distance=Distance.COSINE,
                 ),
             )
-
-# ----------------------------------------------------------------------------------------------
 
     def add_memory(
         self,
@@ -92,12 +90,15 @@ class QdrantMemoryStore:
             "importance": importance,
         }
 
-# ---------------------------------------------------------------------------------------------
-
-    def search_memories(self, query: str, limit: int = 5, min_score: float = 0.35, category: str|None = None):
+    def search_memories(
+        self,
+        query: str,
+        limit: int = 5,
+        min_score: float = 0.35,
+        category: str | None = None,
+    ):
         query_vector = self.embedding_service.embed_text(query)
 
-        # We fetch more than needed because we will filter/rerank locally.
         raw_limit = max(limit * 3, 10)
 
         results = self.client.query_points(
@@ -133,8 +134,6 @@ class QdrantMemoryStore:
 
             seen_texts.add(normalized_text)
 
-            # Importance-aware ranking.
-            # Similarity score is still primary, but important memories get a small boost.
             importance_boost = importance / 100
             final_score = result.score + importance_boost
 
@@ -154,14 +153,12 @@ class QdrantMemoryStore:
 
         return memories[:limit]
 
-# ------------------------------------------------------------------------------------------------
-
-    def list_memories(self, limit: int = 10):
+    def list_memories(self, limit: int = 50):
         results, _ = self.client.scroll(
             collection_name=self.collection_name,
             limit=limit,
             with_payload=True,
-            with_vectors=False
+            with_vectors=False,
         )
 
         memories = []
@@ -184,22 +181,22 @@ class QdrantMemoryStore:
     def delete_memory(self, memory_id: str):
         self.client.delete(
             collection_name=self.collection_name,
-            points_selector=[memory_id]
+            points_selector=[memory_id],
         )
 
         return {
             "status": "deleted",
-            "id": memory_id
+            "id": memory_id,
         }
 
     def reset_memories(self):
         self.client.delete_collection(
-            collection_name = self.collection_name
+            collection_name=self.collection_name,
         )
 
         self._ensure_collection()
 
         return {
             "status": "reset",
-            "message": "All memories were deleted and the collection was recreated."
+            "message": "All memories were deleted and the collection was recreated.",
         }

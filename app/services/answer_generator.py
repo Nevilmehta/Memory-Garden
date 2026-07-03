@@ -1,10 +1,11 @@
-from app.groq_client import GroqClient
+from app.clients.groq_client import GroqClient
+
 
 class AnswerGenerator:
     def __init__(self):
-        self.llm = GroqClient(model_name="llama-3.1-8b-instant")
+        self.llm = GroqClient()
 
-    def generate_answer(self, question: str, memories: list[dict]):
+    def generate_answer(self, question: str, memories: list[dict]) -> str:
         if not memories:
             return (
                 "I do not have enough relevant memories to answer that yet. "
@@ -39,7 +40,7 @@ Answer the user's question based only on these memories.
 
         return self.llm.generate_text(
             system_prompt=system_prompt,
-            user_prompt=user_prompt
+            user_prompt=user_prompt,
         )
 
     def _format_memories(self, memories: list[dict]) -> str:

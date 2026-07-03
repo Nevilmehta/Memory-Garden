@@ -1,8 +1,9 @@
-from app.groq_client import GroqClient
+from app.clients.groq_client import GroqClient
+
 
 class MemoryExtractor:
     def __init__(self):
-        self.llm = GroqClient(model_name="llama-3.1-8b-instant")
+        self.llm = GroqClient()
 
     def extract(self, message: str) -> dict:
         system_prompt = """
@@ -69,7 +70,6 @@ User message:
             user_prompt=user_prompt,
         )
 
-
         if "memories" in result:
             memories = result.get("memories", [])
         else:
@@ -105,64 +105,3 @@ User message:
         return {
             "memories": cleaned_memories
         }
-
-    def _classify_category(self, text: str) -> str:
-        lower_text = text.lower()
-
-        if any(word in lower_text for word in ["project", "build", "building", "app", "system"]):
-            return "project"
-
-        if any(word in lower_text for word in ["learn", "learning", "study", "understand"]):
-            return "learning"
-
-        if any(word in lower_text for word in ["goal", "want to", "plan to", "aim"]):
-            return "goal"
-
-        if any(word in lower_text for word in ["like", "prefer", "preference", "use qdrant", "not chromadb"]):
-            return "preference"
-
-        if any(word in lower_text for word in ["idea", "thinking", "concept"]):
-            return "idea"
-
-        return "general"
-
-    def _score_importance(self, text: str, category: str) -> int:
-        lower_text = text.lower()
-
-        score = 5
-
-        if category in ["project", "goal"]:
-            score += 2
-
-        if category == "learning":
-            score += 1
-
-        if any(word in lower_text for word in ["jarvis", "memory garden", "long-term", "future"]):
-            score += 2
-
-        if any(word in lower_text for word in ["important", "must", "only", "remember"]):
-            score += 1
-
-        return min(score, 10)
-
-    def _rewrite_as_memory(self, text: str) -> str:
-        lower_text = text.lower()
-
-        if lower_text.startswith("i am "):
-            return "User is " + text[5:]
-
-        if lower_text.startswith("i'm "):
-            return "User is " + text[4:]
-
-        if lower_text.startswith("i want "):
-            return "User wants " + text[7:]
-
-        if lower_text.startswith("i prefer "):
-            return "User prefers " + text[9:]
-
-        if lower_text.startswith("my "):
-            return "User's " + text[3:]
-
-        return f"User said: {text}"
-
-        
