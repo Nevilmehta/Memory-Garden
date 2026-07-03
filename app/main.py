@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 
 from app.qdrant_store import QdrantMemoryStore
 from app.memory_extractor import MemoryExtractor
@@ -114,6 +114,28 @@ def chat_with_memory(request: ChatRequest):
 
 # ----------------------------------------------------------------------------
 
+@app.get("/memories")
+def list_memories(limit: int = Query(50, ge=1, le=200)):
+    memories = memory_store.list_memories(limit=limit)
+
+    return {
+        "memories": memories,
+        "count": len(memories),
+    }
+
+@app.delete("/memories/{memory_id}")
+def delete_memory(memory_id: str):
+    result = memory_store.delete_memory(memory_id=memory_id)
+
+    return result
+
+@app.delete("/memories/reset/all")
+def reset_memories():
+    result = memory_store.reset_memories()
+
+    return result
+
+# ----------------------------------------------------------------------------
 @app.get("/health")
 def health_check():
     return {

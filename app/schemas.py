@@ -24,3 +24,8 @@ class ChatRequest(BaseModel):
     limit: int = Field(default=5, ge=1, le=20)
     min_score: float = Field(default=0.35, ge=0.0, le=1.0)
     category: Optional[str] = None
+
+# -------------------------------------------------------------------------
+
+class MemoryListRequest(BaseModel):
+    limit: int = Field(default=50, ge=1, le=200)

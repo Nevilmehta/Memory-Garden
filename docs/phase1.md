@@ -233,15 +233,54 @@ User prefers Qdrant for Memory Garden.
 That is bad because the LLM may try to answer using unrelated memories.
 So now we improve retrieval quality.
 
-New retrieval logic:
-Search Qdrant
+Current Architecture:
+Question
 ↓
-Remove memories below score threshold
+Embedding
 ↓
-Remove duplicate memory text
+Qdrant search
 ↓
-Boost important memories slightly
+Score threshold
 ↓
-Return cleaner results
+Category filter
+↓
+Deduplication
+↓
+Importance reranking
+↓
+Groq answer generation
 
+So before adding agents, LangGraph, or knowledge graphs, 
+we are making the base retrieval system reliable.
 ---------------------------------------------------------------------------------
+
+Memory management tools:
+Right now you can:
+
+store memories
+extract memories
+search memories
+chat with memories
+
+But during development, you need tools to manage your memory database.
+
+We will add:
+
+GET    /memories
+DELETE /memories/{memory_id}
+DELETE /memories/reset
+
+This helps because you already have duplicates from testing.
+
+----------------------------------------------------------------------------------------------
+
+What scroll means:
+Search is for semantic similarity.
+search = find memories related to this query
+
+Scroll is for browsing stored data.
+scroll = list stored memories
+
+So /memories/search and GET /memories solve different problems.
+
+-----------------------------------------------------------------------------------------------

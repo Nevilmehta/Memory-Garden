@@ -19,6 +19,8 @@ class QdrantMemoryStore:
         self.embedding_service = EmbeddingService()
         self._ensure_collection()
 
+# ----------------------------------------------------------------------------------------------
+
     def _ensure_collection(self):
         collections = self.client.get_collections().collections
         existing_names = [collection.name for collection in collections]
@@ -31,6 +33,8 @@ class QdrantMemoryStore:
                     distance=Distance.COSINE,
                 ),
             )
+
+# ----------------------------------------------------------------------------------------------
 
     def add_memory(
         self,
@@ -87,6 +91,8 @@ class QdrantMemoryStore:
             "category": category,
             "importance": importance,
         }
+
+# ---------------------------------------------------------------------------------------------
 
     def search_memories(self, query: str, limit: int = 5, min_score: float = 0.35, category: str|None = None):
         query_vector = self.embedding_service.embed_text(query)
@@ -147,3 +153,53 @@ class QdrantMemoryStore:
         memories.sort(key=lambda memory: memory["final_score"], reverse=True)
 
         return memories[:limit]
+
+# ------------------------------------------------------------------------------------------------
+
+    def list_memories(self, limit: int = 10):
+        results, _ = self.client.scroll(
+            collection_name=self.collection_name,
+            limit=limit,
+            with_payload=True,
+            with_vectors=False
+        )
+
+        memories = []
+
+        for point in results:
+            payload = point.payload or {}
+
+            memories.append(
+                {
+                    "id": point.id,
+                    "text": payload.get("text"),
+                    "category": payload.get("category"),
+                    "importance": payload.get("importance"),
+                    "created_at": payload.get("created_at"),
+                }
+            )
+
+        return memories
+
+    def delete_memory(self, memory_id: str):
+        self.client.delete(
+            collection_name=self.collection_name,
+            points_selector=[memory_id]
+        )
+
+        return {
+            "status": "deleted",
+            "id": memory_id
+        }
+
+    def reset_memories(self):
+        self.client.delete_collection(
+            collection_name = self.collection_name
+        )
+
+        self._ensure_collection()
+
+        return {
+            "status": "reset",
+            "message": "All memories were deleted and the collection was recreated."
+        }
