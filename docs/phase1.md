@@ -284,3 +284,29 @@ scroll = list stored memories
 So /memories/search and GET /memories solve different problems.
 
 -----------------------------------------------------------------------------------------------
+Right now, Memory Garden can prevent near-duplicates.
+But it still has a deeper problem.
+
+Example:
+Old memory:
+User was considering ChromaDB for Memory Garden.
+
+New memory:
+User decided to use Qdrant only for Memory Garden, not ChromaDB.
+A normal RAG system would store both.
+
+But a living memory system should understand:
+The new memory updates or replaces the old memory.
+So now we add basic memory lifecycle status.
+
+We will add memory status:
+active
+outdated
+archived
+
+For now:
+active   = current useful memory
+outdated = old memory replaced by a newer memory
+archived = not deleted, but no longer used normally
+
+This prepares us for the future Archivist Agent.

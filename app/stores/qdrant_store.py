@@ -49,26 +49,51 @@ class QdrantMemoryStore:
             with_payload=True,
         ).points
 
-        if existing_results and existing_results[0].score >= 0.92:
-            existing_memory = existing_results[0]
+        if existing_results:
+            top_result = existing_results[0]
+            top_payload = top_result.payload or {}
 
-            return {
-                "status": "duplicate",
-                "id": existing_memory.id,
-                "text": existing_memory.payload.get("text"),
-                "category": existing_memory.payload.get("category"),
-                "importance": existing_memory.payload.get("importance"),
-                "similarity_score": existing_memory.score,
-                "message": "A very similar memory already exists. Memory was not stored again.",
-            }
+            if (
+                top_payload.get("status", "active") == "active"
+                and top_result.score >= 0.92
+            ):
+                return {
+                    "status": "duplicate",
+                    "id": top_result.id,
+                    "text": top_payload.get("text"),
+                    "category": top_payload.get("category"),
+                    "importance": top_payload.get("importance"),
+                    "memory_status": top_payload.get("status", "active"),
+                    "similarity_score": top_result.score,
+                    "message": "A very similar active memory already exists. Memory was not stored again.",
+                }
+
+        superseded_memory_ids = []
+
+        if self._looks_like_update(text):
+            related_memories = self.find_related_active_memories(
+                text=text,
+                category=category,
+                limit=3,
+                min_score=0.45,
+            )
+
+            for memory in related_memories:
+                self.mark_memory_outdated(memory["id"])
+                superseded_memory_ids.append(memory["id"])
 
         memory_id = str(uuid4())
+
+        now = datetime.now(timezone.utc).isoformat()
 
         payload = {
             "text": text,
             "category": category,
             "importance": importance,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "status": "active",
+            "created_at": now,
+            "updated_at": now,
+            "supersedes": superseded_memory_ids,
         }
 
         point = PointStruct(
@@ -88,6 +113,8 @@ class QdrantMemoryStore:
             "text": text,
             "category": category,
             "importance": importance,
+            "memory_status": "active",
+            "supersedes": superseded_memory_ids,
         }
 
     def search_memories(
@@ -113,6 +140,10 @@ class QdrantMemoryStore:
 
         for result in results:
             payload = result.payload or {}
+
+            memory_status = payload.get("status", "active")
+            if memory_status != "active":
+                continue
 
             text = payload.get("text", "")
             memory_category = payload.get("category", "general")
@@ -145,7 +176,10 @@ class QdrantMemoryStore:
                     "text": text,
                     "category": memory_category,
                     "importance": importance,
+                    "memory_status": payload.get("status", "active"),
                     "created_at": payload.get("created_at"),
+                    "updated_at": payload.get("updated_at"),
+                    "supersedes": payload.get("supersedes", []),
                 }
             )
 
@@ -172,7 +206,10 @@ class QdrantMemoryStore:
                     "text": payload.get("text"),
                     "category": payload.get("category"),
                     "importance": payload.get("importance"),
+                    "memory_status": payload.get("status", "active"),
                     "created_at": payload.get("created_at"),
+                    "updated_at": payload.get("updated_at"),
+                    "supersedes": payload.get("supersedes", []),
                 }
             )
 
@@ -200,3 +237,77 @@ class QdrantMemoryStore:
             "status": "reset",
             "message": "All memories were deleted and the collection was recreated.",
         }
+
+    def mark_memory_outdated(self, memory_id: str):
+        now = datetime.now(timezone.utc).isoformat()
+
+        self.client.set_payload(
+            collection_name=self.collection_name,
+            payload={
+                "status": "outdated",
+                "updated_at": now,
+            },
+            points=[memory_id]
+        )
+
+        return {
+            "status": "marked_outdated",
+            "id": memory_id,
+        }
+
+    def _looks_like_update(self, text:str):
+        lower_text = text.lower()
+
+        update_signals = [
+            "decided",
+            "now",
+            "instead",
+            "no longer",
+            "not anymore",
+            "changed",
+            "switch",
+            "switched",
+            "only",
+            "prefer",
+            "prefers",
+            "replaced",
+            "rather than",
+        ]
+
+        return any(signal in lower_text for signal in update_signals)
+
+    def find_related_active_memories(self, text: str, category: str = "general", limit: int = 3, min_score: float = 0.45):
+        query_vector = self.embedding_service.embed_text(text)
+
+        results = self.client.query_points(
+            collection_name=self.collection_name,
+            query=query_vector,
+            limit=limit,
+            with_payload=True
+        ).points
+
+        related_memories = []
+
+        for result in results:
+            payload = result.payload or {}
+
+            if result.score < min_score:
+                continue
+
+            if payload.get("status", "active") != "active":
+                continue
+
+            if payload.get("category", "general") != category:
+                continue
+
+            related_memories.append(
+                {
+                    "id": result.id,
+                    "score": result.score,
+                    "text": payload.get("text"),
+                    "category": payload.get("category"),
+                    "importance": payload.get("importance"),
+                }
+            )
+
+        return related_memories

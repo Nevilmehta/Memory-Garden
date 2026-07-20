@@ -96,6 +96,11 @@ def reset_memories():
 
     return result
 
+@router.patch("/{memory_id}/outdated")
+def mark_memory_outdated(memory_id: str):
+    result = memory_store.mark_memory_outdated(memory_id)
+
+    return result
 
 @router.delete("/{memory_id}")
 def delete_memory(memory_id: str):
