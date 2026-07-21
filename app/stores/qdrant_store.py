@@ -117,6 +117,46 @@ class QdrantMemoryStore:
             "supersedes": superseded_memory_ids,
         }
 
+    def index_memory(
+        self,
+        memory_id: str,
+        text: str,
+        category: str,
+        importance: int,
+        status: str = "active",
+        supersedes: list[str] | None = None,
+        created_at: str | None = None,
+        updated_at: str | None = None
+    ):
+        vector = self.embedding_service.embed_text(text)
+
+        payload = {
+            "memory_id": memory_id,
+            "text": text,
+            "category": category,
+            "importance": importance,
+            "status": status,
+            "supersedes": supersedes or [],
+            "created_at": created_at,
+            "updated_at": updated_at,
+        }
+
+        point = PointStruct(
+            id=memory_id,
+            vector=vector,
+            payload=payload,
+        )
+
+        self.client.upsert(
+            collection_name=self.collection_name,
+            points=[point],
+        )
+
+        return {
+            "status": "indexed",
+            "id": memory_id
+        }
+
     def search_memories(
         self,
         query: str,

@@ -310,3 +310,39 @@ outdated = old memory replaced by a newer memory
 archived = not deleted, but no longer used normally
 
 This prepares us for the future Archivist Agent.
+
+-------------------------------------------------------------------------------
+New architecture:
+
+Right now:
+Memory text + vector + metadata
+↓
+Qdrant
+
+After this phase:
+PostgreSQL
+= source of truth for memory records
+
+Qdrant
+= vector search index
+
+So the memory will live in two places:
+PostgreSQL:
+id, text, category, importance, status, timestamps, supersedes
+
+Qdrant:
+id, vector, searchable payload
+
+Important idea:
+Qdrant helps us find relevant memories.
+PostgreSQL owns the actual memory data.
+-----------------------------------------------------------------
+
+After this setup works, we’ll create a service called:
+MemoryService
+
+It will coordinate:
+MemoryRepository → PostgreSQL
+QdrantMemoryStore → vector index
+MemoryExtractor → Groq
+
