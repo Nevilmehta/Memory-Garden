@@ -345,4 +345,51 @@ It will coordinate:
 MemoryRepository → PostgreSQL
 QdrantMemoryStore → vector index
 MemoryExtractor → Groq
+-------------------------------------------------------------------
+
+Right now your route probably something like this:
+@router.post("/extract-and-store")
+def extract_and_store(...):
+    memories = extractor.extract(...)
+    repository.create(...)
+    qdrant.index(...)
+
+Looks fine...
+
+Until you add:
+Reflection Agent
+Kafka
+LangGraph
+REST API
+CLI
+Scheduler
+Discord Bot
+Jarvis Voice Assistant
+
+Now every one of those will duplicate this logic.
+Instead we want one place responsible for memory operations.
+
+That place is:
+MemoryService
+Think of it as the orchestrator.
+
+New Architecture:
+
+Instead of:
+API
+ ↓
+Repository
+ ↓
+Qdrant
+
+We'll have:
+
+                API
+                 │
+                 ▼
+          MemoryService
+      ┌─────────┼─────────┐
+      ▼         ▼         ▼
+ Repository   Extractor  Qdrant
+(Postgres)     (Groq)   (Vectors)
 

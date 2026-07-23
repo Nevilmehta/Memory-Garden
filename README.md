@@ -29,3 +29,29 @@ auth, users, background workers, observability, logging, tests
 
 Phase 10 — Polished Frontend
 real custom UI, not Streamlit
+
+-----------------------------------------------------------------------------
+Repository:
+
+Only knows SQL.
+create_memory()
+update_memory()
+delete_memory()
+list_memories()
+
+Qdrant Store:
+
+Only knows vectors.
+index()
+search()
+delete_vector()
+
+Extractor
+
+Only knows LLM.
+extract()
+classify()
+later:
+detect_updates()
+detect_relationships()
+
