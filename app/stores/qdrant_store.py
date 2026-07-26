@@ -132,13 +132,7 @@ class QdrantMemoryStore:
 
         payload = {
             "memory_id": memory_id,
-            "text": text,
-            "category": category,
-            "importance": importance,
-            "status": status,
-            "supersedes": supersedes or [],
-            "created_at": created_at,
-            "updated_at": updated_at,
+            "status": status
         }
 
         point = PointStruct(

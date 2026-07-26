@@ -393,3 +393,39 @@ We'll have:
  Repository   Extractor  Qdrant
 (Postgres)     (Groq)   (Vectors)
 
+-------------------------------------------------------------------
+currently flow is:
+API
+    ↓
+MemoryService
+    ↓
+QdrantStore.add_memory()
+
+Even though PostgreSQL exists.
+That means Qdrant is still acting like your database, which is not what we want.
+
+we want this:
+MemoryService
+      │
+      ▼
+MemoryRepository
+(PostgreSQL)
+      │
+      ▼
+Memory object created
+      │
+      ▼
+QdrantStore.index_memory()
+
+---------------------------------------------------------------------------
+PostgreSQL stores the complete memory record.
+
+Qdrant stores only:
+memory_id
+embedding vector
+optionally a tiny amount of search metadata if needed.
+
+That teaches you an important production concept:
+The vector database is an index, not your primary database.
+
+Qdrant never creates ids anymore , postgreSQL does.
