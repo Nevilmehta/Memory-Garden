@@ -58,3 +58,10 @@ class MemoryRepository:
     def reset_memories(self):
         self.db.query(Memory).delete()
         self.db.commit()
+
+    def get_memories_by_ids(self, memory_ids):
+        memories = (
+            self.db.query(Memory)
+            .filter(Memory.id.in_(memory_ids))
+            .all()
+        )

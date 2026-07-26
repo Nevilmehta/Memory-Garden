@@ -156,70 +156,35 @@ class QdrantMemoryStore:
         query: str,
         limit: int = 5,
         min_score: float = 0.35,
-        category: str | None = None,
     ):
         query_vector = self.embedding_service.embed_text(query)
-
-        raw_limit = max(limit * 3, 10)
 
         results = self.client.query_points(
             collection_name=self.collection_name,
             query=query_vector,
-            limit=raw_limit,
+            limit=limit,
             with_payload=True,
         ).points
 
-        memories = []
-        seen_texts = set()
+        matches = []
 
         for result in results:
             payload = result.payload or {}
 
-            memory_status = payload.get("status", "active")
-            if memory_status != "active":
-                continue
-
-            text = payload.get("text", "")
-            memory_category = payload.get("category", "general")
-            importance = payload.get("importance", 5)
-
-            if not text:
+            if payload.get("status") != "active":
                 continue
 
             if result.score < min_score:
                 continue
 
-            if category and memory_category != category:
-                continue
-
-            normalized_text = text.strip().lower()
-
-            if normalized_text in seen_texts:
-                continue
-
-            seen_texts.add(normalized_text)
-
-            importance_boost = importance / 100
-            final_score = result.score + importance_boost
-
-            memories.append(
+            matches.append(
                 {
-                    "id": result.id,
+                    "memory_id": payload["memory_id"],
                     "score": result.score,
-                    "final_score": final_score,
-                    "text": text,
-                    "category": memory_category,
-                    "importance": importance,
-                    "memory_status": payload.get("status", "active"),
-                    "created_at": payload.get("created_at"),
-                    "updated_at": payload.get("updated_at"),
-                    "supersedes": payload.get("supersedes", []),
                 }
             )
 
-        memories.sort(key=lambda memory: memory["final_score"], reverse=True)
-
-        return memories[:limit]
+        return matches
 
     def list_memories(self, limit: int = 50):
         results, _ = self.client.scroll(

@@ -429,3 +429,26 @@ That teaches you an important production concept:
 The vector database is an index, not your primary database.
 
 Qdrant never creates ids anymore , postgreSQL does.
+
+-----------------------------------------------------------------------------
+
+Question
+    │
+    ▼
+Qdrant
+    │
+    ▼
+memory_id + score
+    │
+    ▼
+MemoryRepository
+(PostgreSQL)
+    │
+    ▼
+Complete Memory Object
+
+This is how companies like OpenAI, Anthropic, and many enterprise RAG systems separate concerns:
+
+Vector DB → "Which memories are semantically similar?"
+Relational DB → "Give me the actual memory."
+

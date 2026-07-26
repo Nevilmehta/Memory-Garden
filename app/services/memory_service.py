@@ -44,7 +44,7 @@ class MemoryService:
             query=search.query,
             limit=search.limit,
             min_score=search.min_score,
-            category=search.category,
+            # category=search.category,
         )
 
         return {
